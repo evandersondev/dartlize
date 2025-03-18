@@ -1,8 +1,7 @@
-import 'package:sqlite3/sqlite3.dart';
-
 import 'package:dartlize/src/data_types.dart';
 import 'package:dartlize/src/database_driver.dart';
 import 'package:dartlize/src/unsupported_data_type_exception.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 class SqliteDriver extends DatabaseDriver {
   late Database _connection;
@@ -29,20 +28,18 @@ class SqliteDriver extends DatabaseDriver {
   ]) async {
     validateSchema(schema);
     var primaryKeyField = options?['primaryKey'];
-    var columns = schema.entries
-        .map((entry) {
-          var columnType = _mapDataType(entry.value);
-          var definition = '${entry.key} $columnType';
-          if (primaryKeyField != null && entry.key == primaryKeyField) {
-            if (columnType == 'INTEGER') {
-              definition += ' PRIMARY KEY AUTOINCREMENT';
-            } else {
-              definition += ' PRIMARY KEY';
-            }
-          }
-          return definition;
-        })
-        .join(', ');
+    var columns = schema.entries.map((entry) {
+      var columnType = _mapDataType(entry.value);
+      var definition = '${entry.key} $columnType';
+      if (primaryKeyField != null && entry.key == primaryKeyField) {
+        if (columnType == 'INTEGER') {
+          definition += ' PRIMARY KEY AUTOINCREMENT';
+        } else {
+          definition += ' PRIMARY KEY';
+        }
+      }
+      return definition;
+    }).join(', ');
     var query = 'CREATE TABLE IF NOT EXISTS $tableName ($columns)';
     _connection.execute(query);
   }
@@ -95,15 +92,14 @@ class SqliteDriver extends DatabaseDriver {
   @override
   Future<List<Map<String, dynamic>>> findAll(String table) {
     final result = _connection.select('SELECT * FROM $table');
-    final rows =
-        result.map((row) {
-          final nestedMap = row.toTableColumnMap();
-          final flattened = <String, dynamic>{};
-          nestedMap?.forEach((_, colMap) {
-            flattened.addAll(colMap);
-          });
-          return flattened;
-        }).toList();
+    final rows = result.map((row) {
+      final nestedMap = row.toTableColumnMap();
+      final flattened = <String, dynamic>{};
+      nestedMap?.forEach((_, colMap) {
+        flattened.addAll(colMap);
+      });
+      return flattened;
+    }).toList();
     return Future.value(rows);
   }
 
@@ -135,7 +131,4 @@ class SqliteDriver extends DatabaseDriver {
       return stmt.execute(parameters);
     }
   }
-
-  @override
-  Future<void> sync() async {}
 }

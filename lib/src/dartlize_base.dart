@@ -1,30 +1,50 @@
-// import 'package:mongo_dart/mongo_dart.dart' as mongo;
-
-import 'package:dartlize/src/database_driver.dart';
+import 'package:dartlize/dartlize.dart';
 import 'package:dartlize/src/model.dart';
 
-import 'data_types.dart';
+import 'database_driver.dart';
+// Importar os drivers MySQL e Postgres conforme necessário.
+// import 'mysql_driver.dart';
+// import 'postgres_driver.dart';
 
-class Dartilize {
-  static final Dartilize _instance = Dartilize._internal();
-  late DatabaseDriver _driver;
-  final Map<String, Model> _models = {};
+class Dartlize {
+  Dartlize._internal();
+  static final Dartlize _instance = Dartlize._internal();
+  late final DatabaseDriver _driver;
+  bool _driverAssigned = false;
 
-  factory Dartilize(DatabaseDriver driver) {
-    _instance._driver = driver;
+  factory Dartlize(String uri) {
+    if (!_instance._driverAssigned) {
+      _instance._setDriver(uri);
+      _instance._driverAssigned = true;
+    }
     return _instance;
   }
 
-  Dartilize._internal();
+  void _setDriver(String uri) {
+    if (uri.startsWith("sqlite:")) {
+      // Remove o prefixo "sqlite:" caso necessário, ou passa o URI completo
+      _driver = SqliteDriver(uri);
+    } else if (uri.startsWith("mysql:")) {
+      // Exemplo: _driver = MySqlDriver(uri);
+      // Implemente conforme o seu driver MySQL
+      throw UnimplementedError("MySqlDriver não foi implementado.");
+    } else if (uri.startsWith("postgres:")) {
+      // Exemplo: _driver = PostgresDriver(uri);
+      // Implemente conforme o seu driver Postgres
+      throw UnimplementedError("PostgresDriver não foi implementado.");
+    } else {
+      throw Exception("URI do driver não suportado.");
+    }
+  }
 
   Future<void> connect() => _driver.connect();
+
   Future<void> disconnect() => _driver.disconnect();
 
+  // Método para sincronizar os modelos com o banco de dados
   Future<void> sync(List<Model> models) async {
     await _driver.connect();
-
     for (var model in models) {
-      _models[model.name] = model;
       await model.sync();
     }
   }
