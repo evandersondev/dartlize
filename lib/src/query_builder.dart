@@ -1,4 +1,4 @@
-class QueryBuilder {
+final class Kartx {
   String _table = '';
   List<String> _columns = ['*'];
   final List<String> _whereClauses = [];
@@ -14,58 +14,64 @@ class QueryBuilder {
   String? _createTableSQL;
   final List<String> _alterTableCommands = [];
 
-  QueryBuilder from(String table) {
+  Kartx from(String table) {
     _table = table;
     return this;
   }
 
-  QueryBuilder select(List<String> columns) {
+  Kartx select(List<String> columns) {
     _queryType = 'SELECT';
     _columns = columns;
     return this;
   }
 
-  QueryBuilder where(String column, String operator, dynamic value) {
+  Kartx where(String column, String operator, dynamic value) {
     _whereClauses.add("$column $operator ?");
     _parameters.add(value);
     return this;
   }
 
-  QueryBuilder orderBy(String column, [String direction = 'ASC']) {
+  Kartx orderBy(String column, [String direction = 'ASC']) {
     _orderByClauses.add("$column $direction");
     return this;
   }
 
-  QueryBuilder limit(int value) {
+  Kartx limit(int value) {
     _limit = value;
     return this;
   }
 
-  QueryBuilder offset(int value) {
+  Kartx offset(int value) {
     _offset = value;
     return this;
   }
 
-  QueryBuilder insert(Map<String, dynamic> data) {
+  Kartx insert(Map<String, dynamic> data) {
     _queryType = 'INSERT';
-    _insertData = data;
-    _parameters.addAll(data.values);
+
+    final sanitizedData = <String, dynamic>{};
+    data.forEach((key, value) {
+      sanitizedData[key] = value;
+    });
+
+    _insertData = sanitizedData;
+    _parameters.addAll(sanitizedData.values);
     return this;
   }
 
-  QueryBuilder update(Map<String, dynamic> data) {
+  Kartx update(Map<String, dynamic> data) {
     _queryType = 'UPDATE';
     _updateData = data;
     _parameters.addAll(data.values);
     return this;
   }
 
-  QueryBuilder delete() {
+  Kartx delete() {
     _queryType = 'DELETE';
     return this;
   }
 
-  QueryBuilder join(
+  Kartx join(
     String table,
     String column1,
     String column2, {
@@ -75,40 +81,40 @@ class QueryBuilder {
     return this;
   }
 
-  QueryBuilder function(String function, String column, String alias) {
+  Kartx function(String function, String column, String alias) {
     _columns = ["$function($column) AS $alias"];
     return this;
   }
 
-  QueryBuilder count() {
+  Kartx count() {
     _columns = ["COUNT(*) AS total"];
     return this;
   }
 
-  QueryBuilder createTable(String table, Map<String, String> columns) {
+  Kartx createTable(String table, Map<String, String> columns) {
     _queryType = 'CREATE_TABLE';
     _createTableSQL =
         "CREATE TABLE IF NOT EXISTS $table (${columns.entries.map((e) => "${e.key} ${e.value}").join(', ')})";
     return this;
   }
 
-  QueryBuilder dropTable(String table) {
+  Kartx dropTable(String table) {
     _queryType = 'DROP_TABLE';
     _table = table;
     return this;
   }
 
-  QueryBuilder addColumn(String columnName, String columnType) {
+  Kartx addColumn(String columnName, String columnType) {
     _alterTableCommands.add("ADD COLUMN $columnName $columnType");
     return this;
   }
 
-  QueryBuilder dropColumn(String columnName) {
+  Kartx dropColumn(String columnName) {
     _alterTableCommands.add("DROP COLUMN $columnName");
     return this;
   }
 
-  QueryBuilder union(QueryBuilder otherQuery) {
+  Kartx union(Kartx otherQuery) {
     _unionQueries.add(otherQuery.toSql());
     return this;
   }

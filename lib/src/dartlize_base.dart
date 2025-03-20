@@ -1,10 +1,5 @@
 import 'package:dartlize/dartlize.dart';
-import 'package:dartlize/src/model.dart';
-
-import 'database_driver.dart';
-// Importar os drivers MySQL e Postgres conforme necessário.
-// import 'mysql_driver.dart';
-// import 'postgres_driver.dart';
+import 'package:dartlize/src/drivers/mysql_driver.dart';
 
 class Dartlize {
   Dartlize._internal();
@@ -20,14 +15,21 @@ class Dartlize {
     return _instance;
   }
 
+  // Get to access the driver instance
+  DatabaseDriver get driver => _driver;
+
+  // ignore: unnecessary_null_comparison
+  bool authenticate() => _driver != null;
+
+  Future<void> close() async {
+    await _driver.close();
+  }
+
   void _setDriver(String uri) {
     if (uri.startsWith("sqlite:")) {
-      // Remove o prefixo "sqlite:" caso necessário, ou passa o URI completo
       _driver = SqliteDriver(uri);
     } else if (uri.startsWith("mysql:")) {
-      // Exemplo: _driver = MySqlDriver(uri);
-      // Implemente conforme o seu driver MySQL
-      throw UnimplementedError("MySqlDriver não foi implementado.");
+      _driver = MySqlDriver(uri);
     } else if (uri.startsWith("postgres:")) {
       // Exemplo: _driver = PostgresDriver(uri);
       // Implemente conforme o seu driver Postgres
@@ -37,16 +39,8 @@ class Dartlize {
     }
   }
 
-  Future<void> connect() => _driver.connect();
-
-  Future<void> disconnect() => _driver.disconnect();
-
-  // Método para sincronizar os modelos com o banco de dados
-  Future<void> sync(List<Model> models) async {
+  Future<void> sync() async {
     await _driver.connect();
-    for (var model in models) {
-      await model.sync();
-    }
   }
 
   Model define(
@@ -54,7 +48,7 @@ class Dartlize {
     Map<String, DataTypes> schema, [
     Map<String, dynamic>? options,
   ]) {
-    var model = Model(_driver, name, schema, options);
+    var model = Model(name, schema, options, driver: _driver);
 
     return model;
   }
