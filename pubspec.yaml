@@ -1,6 +1,6 @@
 name: dartlize
-description: Dartlize is a lightweight ORM for Dart designed to simplify database interactions inspired by the Sequelize ORM for Javascript.
-version: 0.0.1
+description: Dartlize is discontinued. Please use 🍷 [Dartonic](https://pub.dev/packages/dartonic) instead.
+version: 0.0.2
 homepage: https://github.com/evandersondev/dartlize
 
 environment:
